@@ -1,0 +1,55 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Chart from "../components/Chart.astro";
+import type { Climb } from "../types/data";
+import { Client, cacheExchange, fetchExchange, gql } from "@urql/core";
+
+const client = new Client({
+  url: "https://climb-log-api.vercel.app/graphql",
+  exchanges: [cacheExchange, fetchExchange],
+});
+
+const getClimbsQuery = gql`
+  query Climbs {
+    climbs {
+      id
+      name
+      grade
+      type
+    }
+  }
+`;
+
+const { data } = await client.query(getClimbsQuery);
+const climbs = data?.climbs ?? [];
+// client
+//   .query(getClimbsQuery)
+//   .toPromise()
+//   .then(({ data }: { data: { climbs: Climb[] } }) => {
+//     if (!!data?.climbs?.length) {
+//       climbData = data.climbs;
+//     }
+//   });
+---
+
+<Layout title="Send Log">
+  <main>
+    <h1>Send Log</h1>
+    <Chart data={climbs} />
+  </main>
+</Layout>
+
+<style>
+  main {
+    margin: auto;
+    padding: 1rem;
+    width: 800px;
+    max-width: calc(100% - 2rem);
+    color: white;
+    font-size: 20px;
+    line-height: 1.6;
+  }
+  h1 {
+    color: white;
+  }
+</style>

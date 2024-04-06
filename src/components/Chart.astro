@@ -1,0 +1,91 @@
+---
+import type { Climb } from "../types/data";
+import * as echarts from "echarts";
+
+type Props = {
+  data: Climb[];
+};
+
+const { data }: { data: Climb[] } = Astro.props;
+
+const groupByGrade = (data: Climb[]) => {
+  const grouped: { [key: string]: Climb[] } = {};
+  (data ?? []).forEach((c) => {
+    if (c.grade in grouped) {
+      grouped[c.grade].push(c);
+    } else {
+      grouped[c.grade] = [c];
+    }
+  });
+  return grouped;
+};
+
+const bouldersByGrade = groupByGrade(
+  data.filter(({ type }) => type === "boulder")
+);
+const routesByGrade = groupByGrade(data.filter(({ type }) => type === "sport"));
+
+const chartData: { name: string; value: number }[] = Object.entries(
+  bouldersByGrade
+).map(([grade, climbs]) => ({
+  name: grade,
+  value: climbs.length,
+}));
+
+const chart = echarts.init(null, null, {
+  renderer: "svg",
+  ssr: true,
+  width: 800,
+  height: 400,
+});
+const option = {
+  tooltip: {
+    trigger: "item",
+  },
+  legend: {
+    top: "5%",
+    left: "center",
+  },
+  series: [
+    {
+      name: "Access From",
+      type: "pie",
+      radius: ["40%", "70%"],
+      avoidLabelOverlap: false,
+      itemStyle: {
+        borderRadius: 10,
+      },
+      label: {
+        show: false,
+      },
+      emphasis: {
+        label: {
+          show: true,
+          fontSize: 40,
+          fontWeight: "bold",
+        },
+      },
+      labelLine: {
+        show: false,
+      },
+      data: chartData,
+    },
+  ],
+};
+chart.setOption(option);
+
+const chartSvg = chart.renderToSVGString();
+---
+
+<div id="chart"></div>
+<script define:vars={{ chartSvg }}>
+const chart = document.getElementById("chart");
+console.log(chart);
+chart.innerHTML = chartSvg;
+</script>
+<style>
+  #chart {
+    height: 400px;
+    width: 100%;
+  }
+</style>
