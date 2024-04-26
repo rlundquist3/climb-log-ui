@@ -7,7 +7,7 @@ type Props = {
 };
 
 const { data }: { data: Climb[] } = Astro.props;
-
+console.log(data);
 const groupByGrade = (data: Climb[]) => {
   const grouped: { [key: string]: Climb[] } = {};
   (data ?? []).forEach((c) => {
@@ -48,7 +48,7 @@ const option = {
   },
   series: [
     {
-      name: "Access From",
+      name: "Pie",
       type: "pie",
       radius: ["40%", "70%"],
       avoidLabelOverlap: false,
@@ -80,7 +80,7 @@ const chartSvg = chart.renderToSVGString();
 <div id="chart"></div>
 <script define:vars={{ chartSvg }}>
 const chart = document.getElementById("chart");
-console.log(chart);
+
 chart.innerHTML = chartSvg;
 </script>
 <style>
