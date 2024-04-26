@@ -7,7 +7,7 @@ type Props = {
 };
 
 const { data }: { data: Climb[] } = Astro.props;
-console.log(data);
+
 const groupByGrade = (data: Climb[]) => {
   const grouped: { [key: string]: Climb[] } = {};
   (data ?? []).forEach((c) => {
@@ -25,12 +25,21 @@ const bouldersByGrade = groupByGrade(
 );
 const routesByGrade = groupByGrade(data.filter(({ type }) => type === "sport"));
 
-const chartData: { name: string; value: number }[] = Object.entries(
+const _pieChartData: { name: string; value: number }[] = Object.entries(
   bouldersByGrade
 ).map(([grade, climbs]) => ({
   name: grade,
   value: climbs.length,
 }));
+
+const boulderGrades = Object.keys(bouldersByGrade).sort(
+  (a, b) => Number(a.replace("V", "")) - Number(b.replace("V", ""))
+);
+
+console.log(
+  boulderGrades,
+  boulderGrades.map((g) => bouldersByGrade[g].length)
+);
 
 const chart = echarts.init(null, null, {
   renderer: "svg",
@@ -42,39 +51,23 @@ const option = {
   tooltip: {
     trigger: "item",
   },
-  legend: {
-    top: "5%",
-    left: "center",
+  yAxis: {
+    type: "category",
+    data: boulderGrades,
   },
+  xAxis: { type: "value" },
   series: [
     {
-      name: "Pie",
-      type: "pie",
-      radius: ["40%", "70%"],
-      avoidLabelOverlap: false,
-      itemStyle: {
-        borderRadius: 10,
-      },
-      label: {
-        show: false,
-      },
-      emphasis: {
-        label: {
-          show: true,
-          fontSize: 40,
-          fontWeight: "bold",
-        },
-      },
-      labelLine: {
-        show: false,
-      },
-      data: chartData,
+      type: "bar",
+      data: boulderGrades.map((g) => bouldersByGrade[g].length),
     },
   ],
 };
 chart.setOption(option);
 
 const chartSvg = chart.renderToSVGString();
+
+// TODO: add calendar heatmap
 ---
 
 <div id="chart"></div>
