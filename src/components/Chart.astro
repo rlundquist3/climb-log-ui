@@ -35,19 +35,20 @@ const _pieChartData: { name: string; value: number }[] = Object.entries(
 const boulderGrades = Object.keys(bouldersByGrade).sort(
   (a, b) => Number(a.replace("V", "")) - Number(b.replace("V", ""))
 );
+const routeGrades = Object.keys(routesByGrade).sort();
 
 console.log(
   boulderGrades,
   boulderGrades.map((g) => bouldersByGrade[g].length)
 );
 
-const chart = echarts.init(null, null, {
+const boulderChart = echarts.init(null, null, {
   renderer: "svg",
   ssr: true,
   width: 800,
   height: 400,
 });
-const option = {
+const boulderConfig = {
   tooltip: {
     trigger: "item",
   },
@@ -63,18 +64,44 @@ const option = {
     },
   ],
 };
-chart.setOption(option);
+boulderChart.setOption(boulderConfig);
+const boulderChartSvg = boulderChart.renderToSVGString();
 
-const chartSvg = chart.renderToSVGString();
+const routeChart = echarts.init(null, null, {
+  renderer: "svg",
+  ssr: true,
+  width: 800,
+  height: 400,
+});
+const routeConfig = {
+  tooltip: {
+    trigger: "item",
+  },
+  yAxis: {
+    type: "category",
+    data: routeGrades,
+  },
+  xAxis: { type: "value" },
+  series: [
+    {
+      type: "bar",
+      data: routeGrades.map((g) => routesByGrade[g].length),
+    },
+  ],
+};
+routeChart.setOption(routeConfig);
+const routeChartSvg = routeChart.renderToSVGString();
 
 // TODO: add calendar heatmap
 ---
 
-<div id="chart"></div>
-<script define:vars={{ chartSvg }}>
-const chart = document.getElementById("chart");
-
-chart.innerHTML = chartSvg;
+<div id="boulderChart"></div>
+<div id="routeChart"></div>
+<script define:vars={{ boulderChartSvg, routeChartSvg }}>
+const boulderChart = document.getElementById("boulderChart");
+boulderChart.innerHTML = boulderChartSvg;
+const routeChart = document.getElementById("routeChart");
+routeChart.innerHTML = routeChartSvg;
 </script>
 <style>
   #chart {
