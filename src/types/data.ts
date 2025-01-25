@@ -3,4 +3,6 @@ export type Climb = {
   name: string;
   grade: string;
   type: "boulder" | "sport";
+  createdAt: string;
+  sendDate: string;
 };

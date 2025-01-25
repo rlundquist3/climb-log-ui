@@ -8,6 +8,19 @@ type Props = {
 
 const { data }: { data: Climb[] } = Astro.props;
 
+const groupByYear = (data: Climb[]) => {
+  const grouped: { [key: string]: Climb[] } = {};
+  (data ?? []).forEach((c) => {
+    const year = c.sendDate.split("-")[0];
+    if (year in grouped) {
+      grouped[year].push(c);
+    } else {
+      grouped[year] = [c];
+    }
+  });
+  return grouped;
+};
+
 const groupByGrade = (data: Climb[]) => {
   const grouped: { [key: string]: Climb[] } = {};
   (data ?? []).forEach((c) => {
@@ -20,6 +33,11 @@ const groupByGrade = (data: Climb[]) => {
   return grouped;
 };
 
+const bouldersByYearAndGrade = Object.fromEntries(
+  Object.entries(
+    groupByYear(data.filter(({ type }) => type === "boulder"))
+  ).map(([year, data]) => [year, groupByGrade(data)])
+);
 const bouldersByGrade = groupByGrade(
   data.filter(({ type }) => type === "boulder")
 );
@@ -37,10 +55,7 @@ const boulderGrades = Object.keys(bouldersByGrade).sort(
 );
 const routeGrades = Object.keys(routesByGrade).sort();
 
-console.log(
-  boulderGrades,
-  boulderGrades.map((g) => bouldersByGrade[g].length)
-);
+console.log(bouldersByYearAndGrade);
 
 const boulderChart = echarts.init(null, null, {
   renderer: "svg",
@@ -50,19 +65,28 @@ const boulderChart = echarts.init(null, null, {
 });
 const boulderConfig = {
   tooltip: {
-    trigger: "item",
+    trigger: "axis",
+    axisPointer: {
+      // Use axis to trigger tooltip
+      type: "shadow", // 'shadow' as default; can also be 'line' or 'shadow'
+    },
   },
+  legend: {},
   yAxis: {
     type: "category",
     data: boulderGrades,
   },
   xAxis: { type: "value" },
-  series: [
-    {
-      type: "bar",
-      data: boulderGrades.map((g) => bouldersByGrade[g].length),
-    },
-  ],
+  series: Object.keys(bouldersByYearAndGrade).map((year) => ({
+    name: year,
+    type: "bar",
+    stack: "total",
+    label: { show: true },
+    emphasis: { focus: "series" },
+    data: boulderGrades.map(
+      (grade) => bouldersByYearAndGrade[year][grade]?.length
+    ),
+  })),
 };
 boulderChart.setOption(boulderConfig);
 const boulderChartSvg = boulderChart.renderToSVGString();
