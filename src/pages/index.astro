@@ -20,7 +20,7 @@ const getClimbsQuery = gql`
   }
 `;
 
-const { data } = await client.query(getClimbsQuery);
+const { data } = await client.query(getClimbsQuery, {});
 const climbs = data?.climbs ?? [];
 // client
 //   .query(getClimbsQuery)
